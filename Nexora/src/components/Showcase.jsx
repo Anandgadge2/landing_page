@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUpRight, Sparkles, X, CheckCircle2 } from 'lucide-react';
 
@@ -73,6 +73,24 @@ export default function Showcase() {
   const [selectedProject, setSelectedProject] = useState(null);
 
   const categories = ['All Work', 'Spatial & AI', 'FinTech', 'Automotive & 3D'];
+
+  // Handle Escape key and lock background scroll
+  useEffect(() => {
+    if (!selectedProject) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSelectedProject(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [selectedProject]);
 
   const filteredProjects =
     activeCategory === 'All Work'
@@ -201,7 +219,7 @@ export default function Showcase() {
       {/* Case Study Detail Modal */}
       <AnimatePresence>
         {selectedProject && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div className="fixed inset-0 z-50 overflow-y-auto overflow-x-hidden">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -209,112 +227,118 @@ export default function Showcase() {
               exit={{ opacity: 0 }}
               onClick={() => setSelectedProject(null)}
               className="fixed inset-0 bg-black/80 backdrop-blur-xl"
+              aria-hidden="true"
             />
 
-            {/* Modal Dialog */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-              className="relative w-full max-w-4xl bg-[#090714] border border-white/[0.12] rounded-3xl overflow-hidden shadow-2xl z-10 my-8 max-h-[90vh] flex flex-col"
-            >
-              {/* Header with Close */}
-              <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden shrink-0">
-                <img
-                  src={selectedProject.image}
-                  alt={selectedProject.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#090714] via-black/40 to-transparent" />
-                
-                <button
-                  onClick={() => setSelectedProject(null)}
-                  className="absolute top-4 right-4 p-2 rounded-full bg-black/60 border border-white/20 text-white hover:bg-white/20 transition-all"
-                  aria-label="Close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                <div className="absolute bottom-6 left-6 right-6">
-                  <span className="text-[11px] font-mono tracking-widest text-purple-300 bg-purple-950/80 px-3 py-1 rounded-full border border-purple-500/40 uppercase">
-                    {selectedProject.tag}
-                  </span>
-                  <h3 className="font-display font-extrabold text-2xl sm:text-4xl text-white mt-2">
-                    {selectedProject.title}
-                  </h3>
-                </div>
-              </div>
-
-              {/* Scrollable Body */}
-              <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
-                
-                {/* Metrics Bar */}
-                <div className="grid grid-cols-3 gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                  {selectedProject.metrics.map((metric) => (
-                    <div key={metric.label} className="text-center">
-                      <div className="font-display font-extrabold text-xl sm:text-2xl text-gradient-purple">
-                        {metric.value}
-                      </div>
-                      <div className="text-[10px] font-mono text-gray-400 uppercase mt-0.5">
-                        {metric.label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Narrative Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                  <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                    <div className="font-mono text-xs text-purple-400 uppercase tracking-wider mb-2 font-semibold">
-                      The Architecture Challenge
-                    </div>
-                    <p className="text-gray-300 leading-relaxed">
-                      {selectedProject.challenge}
-                    </p>
-                  </div>
-                  <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                    <div className="font-mono text-xs text-cyan-400 uppercase tracking-wider mb-2 font-semibold">
-                      The NEXORA Solution
-                    </div>
-                    <p className="text-gray-300 leading-relaxed">
-                      {selectedProject.solution}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Tech Stack Chips */}
-                <div>
-                  <div className="text-xs font-mono text-gray-400 uppercase mb-3">
-                    Technologies & Protocols
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedProject.tech.map((t) => (
-                      <span
-                        key={t}
-                        className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-gray-200 flex items-center gap-1.5"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Modal Footer */}
-                <div className="pt-4 border-t border-white/[0.08] flex items-center justify-between">
-                  <span className="text-xs font-mono text-gray-500">
-                    Client: <strong className="text-gray-300">{selectedProject.client}</strong>
-                  </span>
+            {/* Centering Wrapper */}
+            <div className="flex min-h-full items-center justify-center p-3 sm:p-5 md:p-6 text-left">
+              {/* Modal Dialog */}
+              <motion.div
+                role="dialog"
+                aria-modal="true"
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="relative w-full max-w-4xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-3rem)] bg-[#090714] border border-white/[0.12] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl z-10 my-auto flex flex-col"
+              >
+                {/* Header with Close */}
+                <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full overflow-hidden shrink-0">
+                  <img
+                    src={selectedProject.image}
+                    alt={selectedProject.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#090714] via-black/40 to-transparent" />
+                  
                   <button
                     onClick={() => setSelectedProject(null)}
-                    className="px-6 py-2.5 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all"
+                    className="absolute top-4 right-4 p-2 rounded-full bg-black/60 border border-white/20 text-white hover:bg-white/20 transition-all z-20 cursor-pointer"
+                    aria-label="Close"
                   >
-                    Close Overview
+                    <X className="w-5 h-5" />
                   </button>
+
+                  <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6">
+                    <span className="text-[10px] sm:text-[11px] font-mono tracking-widest text-purple-300 bg-purple-950/80 px-3 py-1 rounded-full border border-purple-500/40 uppercase">
+                      {selectedProject.tag}
+                    </span>
+                    <h3 className="font-display font-extrabold text-xl sm:text-3xl md:text-4xl text-white mt-1.5 sm:mt-2">
+                      {selectedProject.title}
+                    </h3>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+
+                {/* Scrollable Body */}
+                <div className="p-5 sm:p-8 overflow-y-auto space-y-5 sm:space-y-6 flex-1 overscroll-contain">
+                  
+                  {/* Metrics Bar */}
+                  <div className="grid grid-cols-3 gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                    {selectedProject.metrics.map((metric) => (
+                      <div key={metric.label} className="text-center">
+                        <div className="font-display font-extrabold text-lg sm:text-2xl text-gradient-purple">
+                          {metric.value}
+                        </div>
+                        <div className="text-[9px] sm:text-[10px] font-mono text-gray-400 uppercase mt-0.5">
+                          {metric.label}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Narrative Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 text-sm">
+                    <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                      <div className="font-mono text-xs text-purple-400 uppercase tracking-wider mb-2 font-semibold">
+                        The Architecture Challenge
+                      </div>
+                      <p className="text-gray-300 leading-relaxed text-xs sm:text-sm">
+                        {selectedProject.challenge}
+                      </p>
+                    </div>
+                    <div className="p-4 sm:p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                      <div className="font-mono text-xs text-cyan-400 uppercase tracking-wider mb-2 font-semibold">
+                        The NEXORA Solution
+                      </div>
+                      <p className="text-gray-300 leading-relaxed text-xs sm:text-sm">
+                        {selectedProject.solution}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Tech Stack Chips */}
+                  <div>
+                    <div className="text-xs font-mono text-gray-400 uppercase mb-2.5">
+                      Technologies & Protocols
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProject.tech.map((t) => (
+                        <span
+                          key={t}
+                          className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-gray-200 flex items-center gap-1.5"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="pt-4 border-t border-white/[0.08] flex items-center justify-between">
+                    <span className="text-xs font-mono text-gray-500">
+                      Client: <strong className="text-gray-300">{selectedProject.client}</strong>
+                    </span>
+                    <button
+                      onClick={() => setSelectedProject(null)}
+                      className="px-6 py-2.5 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all cursor-pointer"
+                    >
+                      Close Overview
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           </div>
         )}
       </AnimatePresence>
